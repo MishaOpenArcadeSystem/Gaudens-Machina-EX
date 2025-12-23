@@ -1,0 +1,59 @@
+COMPLETE BUILD INSTRUCTIONS
+makefile
+
+# Makefile for Gaudens Machina EX
+TARGET = gaudensex.bin
+BANKS = 6
+
+AS = ca65
+LD = ld65
+CFLAGS = -t none --cpu 65C02
+LDFLAGS = -C neo6502-ex.cfg
+
+# Object files for each bank
+BANK0_OBJS = main.o
+BANK1_OBJS = vga_ex.o sprites_ex.o particles_ex.o
+BANK2_OBJS = music_ex.o sound_ex.o
+BANK3_OBJS = levels_ex.o enemies_ex.o bosses_ex.o
+BANK4_OBJS = weapons_ex.o player_ex.o
+BANK5_OBJS = ui_ex.o achievements.o save.o secrets.o
+
+all: $(TARGET)
+
+$(TARGET): $(BANK0_OBJS) $(BANK1_OBJS) $(BANK2_OBJS) $(BANK3_OBJS) $(BANK4_OBJS) $(BANK5_OBJS)
+	$(LD) -o $@ $^ $(LDFLAGS) --dbgfile $(TARGET).dbg
+
+# Bank 0: Main game
+main.o: main.asm gaudensex.inc
+	$(AS) -DBANK=0 -o $@ main.asm
+
+# Bank 1: Graphics
+vga_ex.o: vga_ex.asm gaudensex.inc
+	$(AS) -DBANK=1 -o $@ vga_ex.asm
+
+# Bank 2: Music
+music_ex.o: music_ex.asm gaudensex.inc
+	$(AS) -DBANK=2 -o $@ music_ex.asm
+
+# Bank 3: Levels
+levels_ex.o: levels_ex.asm gaudensex.inc
+	$(AS) -DBANK=3 -o $@ levels_ex.asm
+
+# Bank 4: Gameplay
+weapons_ex.o: weapons_ex.asm gaudensex.inc
+	$(AS) -DBANK=4 -o $@ weapons_ex.asm
+
+# Bank 5: UI
+ui_ex.o: ui_ex.asm gaudensex.inc
+	$(AS) -DBANK=5 -o $@ ui_ex.asm
+
+clean:
+	rm -f *.o $(TARGET) $(TARGET).dbg
+
+flash:
+	neo6502-flasher --banks $(BANKS) --image $(TARGET)
+
+run:
+	neo6502-terminal --port /dev/ttyUSB0
+
+.PHONY: all clean flash run
